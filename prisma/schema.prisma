@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+generator asset {
+  provider = "prisma-asset-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model asset {
+  id       Int    @id @default(autoincrement())
+  name     String @db.VarChar(255)
+  value    Float  @db.Float
+  clientId Int
+
+  @@index([clientId], map: "Asset_clientId_fkey")
+}
+
+model client {
+  id     Int      @id @default(autoincrement())
+  name   String   @db.VarChar(255)
+  email  String   @unique(map: "email") @db.VarChar(255)
+  status Boolean? @default(true)
+}
