@@ -1,6 +1,5 @@
 // src/controllers/clientController.ts
 import { PrismaClient } from '@prisma/client'; // Importa a instância do Prisma
-import { Prisma, Client } from '@prisma/client'; // Importa o tipo Client do Prisma
 
 const prisma = new PrismaClient(); // Instancia o PrismaClient
 

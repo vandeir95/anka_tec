@@ -1,6 +1,6 @@
 // src/controllers/assetController.ts
 import { PrismaClient } from '@prisma/client'; // Importa a instância do Prisma
-import { Prisma, Asset } from '@prisma/client'; // Importa o tipo Asset do Prisma
+import { Prisma, asset } from '@prisma/client'; // Importa o tipo Asset do Prisma
 
 const prisma = new PrismaClient(); // Instancia o PrismaClient
 

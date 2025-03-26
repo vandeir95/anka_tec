@@ -1,9 +1,9 @@
 generator client {
   provider = "prisma-client-js"
 }
-generator asset {
-  provider = "prisma-asset-js"
-}
+// generator asset {
+//   provider = "prisma-asset-js"
+// }
 
 datasource db {
   provider = "mysql"

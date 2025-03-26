@@ -1,13 +1,22 @@
-// src/routes/assetRoutes.ts
 import { FastifyInstance } from 'fastify';
-import * as assetController from '../controllers/assetController'; // Importa as funções do controller
+import * as assetController from '../controllers/assetController';
+import { z } from 'zod';
+
+// Esquemas de validação com Zod
+const assetSchema = z.object({
+  name: z.string().min(1, 'O nome é obrigatório'),
+  value: z.number().positive('O valor deve ser positivo'),
+  clientId: z.number().int().positive('O clientId deve ser um número inteiro positivo'),
+});
+
+const updateAssetSchema = assetSchema.partial(); // Permite atualização parcial
 
 export async function assetRoutes(fastify: FastifyInstance) {
   // Rota para obter todos os assets
-  fastify.get('/assets', async (request, reply) => {
+  fastify.get('/assets', async (_, reply) => {
     try {
       const assets = await assetController.getAssets();
-      return reply.send(assets); // Retorna todos os assets
+      return reply.send(assets);
     } catch (error) {
       reply.status(500).send({ error: 'Erro ao obter assets' });
     }
@@ -15,14 +24,14 @@ export async function assetRoutes(fastify: FastifyInstance) {
 
   // Rota para obter um asset por ID
   fastify.get('/assets/:id', async (request, reply) => {
-    const { id } = request.params as { id: number };
+    const id = Number((request.params as { id: string }).id);
+    if (isNaN(id)) return reply.status(400).send({ error: 'ID inválido' });
+
     try {
       const asset = await assetController.getAsset(id);
-      if (asset) {
-        return reply.send(asset); // Retorna o asset encontrado
-      } else {
-        return reply.status(404).send({ error: 'Asset não encontrado' });
-      }
+      if (!asset) return reply.status(404).send({ error: 'Asset não encontrado' });
+
+      return reply.send(asset);
     } catch (error) {
       reply.status(500).send({ error: 'Erro ao obter o asset' });
     }
@@ -30,10 +39,14 @@ export async function assetRoutes(fastify: FastifyInstance) {
 
   // Rota para adicionar um novo asset
   fastify.post('/assets', async (request, reply) => {
-    const { name, value, clientId } = request.body as { name: string; value: number; clientId: number };
+    const validation = assetSchema.safeParse(request.body);
+    if (!validation.success) {
+      return reply.status(400).send({ error: validation.error.errors });
+    }
+
     try {
-      const newAsset = await assetController.addAsset({ name, value, clientId });
-      return reply.status(201).send(newAsset); // Retorna o novo asset criado
+      const newAsset = await assetController.addAsset(validation.data);
+      return reply.status(201).send(newAsset);
     } catch (error) {
       reply.status(500).send({ error: 'Erro ao criar o asset' });
     }
@@ -41,11 +54,17 @@ export async function assetRoutes(fastify: FastifyInstance) {
 
   // Rota para atualizar um asset existente
   fastify.put('/assets/:id', async (request, reply) => {
-    const { id } = request.params as { id: number };
-    const { name, value, clientId } = request.body as { name?: string; value?: number; clientId?: number };
+    const id = Number((request.params as { id: string }).id);
+    if (isNaN(id)) return reply.status(400).send({ error: 'ID inválido' });
+
+    const validation = updateAssetSchema.safeParse(request.body);
+    if (!validation.success) {
+      return reply.status(400).send({ error: validation.error.errors });
+    }
+
     try {
-      const updatedAsset = await assetController.updateAsset(id, { name, value, clientId });
-      return reply.send(updatedAsset); // Retorna o asset atualizado
+      const updatedAsset = await assetController.updateAsset(id, validation.data);
+      return reply.send(updatedAsset);
     } catch (error) {
       reply.status(500).send({ error: 'Erro ao atualizar o asset' });
     }
@@ -53,10 +72,12 @@ export async function assetRoutes(fastify: FastifyInstance) {
 
   // Rota para deletar um asset
   fastify.delete('/assets/:id', async (request, reply) => {
-    const { id } = request.params as { id: number };
+    const id = Number((request.params as { id: string }).id);
+    if (isNaN(id)) return reply.status(400).send({ error: 'ID inválido' });
+
     try {
       await assetController.deleteAsset(id);
-      return reply.status(204).send(); // Retorna 204 No Content após deletar
+      return reply.status(204).send();
     } catch (error) {
       reply.status(500).send({ error: 'Erro ao deletar o asset' });
     }
